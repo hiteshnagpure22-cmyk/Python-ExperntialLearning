@@ -1,5 +1,6 @@
 # Contacts Management System - Web Application
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+import jinja2
 import os
 import sys
 
@@ -12,8 +13,43 @@ from Module1 import save_contact_record, FILE_NAME
 from Module2 import get_all_contacts, search_contacts_data
 from Module3 import update_contact_by_index, delete_contact_by_index
 
-app = Flask(__name__)
+# Initialize Flask app
+template_dir = os.path.join(BASE_DIR, "templates") if os.path.isdir(os.path.join(BASE_DIR, "templates")) else BASE_DIR
+static_dir = os.path.join(BASE_DIR, "static") if os.path.isdir(os.path.join(BASE_DIR, "static")) else BASE_DIR
+
+app = Flask(
+    __name__,
+    template_folder=template_dir,
+    static_folder=static_dir
+)
 app.secret_key = "contact-management-secret-key"
+
+# Support templates both in templates/ folder AND directly in root directory
+app.jinja_loader = jinja2.ChoiceLoader([
+    jinja2.FileSystemLoader(os.path.join(BASE_DIR, "templates")),
+    jinja2.FileSystemLoader(BASE_DIR),
+])
+
+# Fallback static routes in case style.css / main.js are located in root directory
+@app.route("/static/css/style.css")
+def serve_fallback_css():
+    if os.path.exists(os.path.join(BASE_DIR, "static", "css", "style.css")):
+        return send_from_directory(os.path.join(BASE_DIR, "static", "css"), "style.css")
+    elif os.path.exists(os.path.join(BASE_DIR, "style.css")):
+        return send_from_directory(BASE_DIR, "style.css")
+    elif os.path.exists(os.path.join(BASE_DIR, "static", "style.css")):
+        return send_from_directory(os.path.join(BASE_DIR, "static"), "style.css")
+    return "", 404
+
+@app.route("/static/js/main.js")
+def serve_fallback_js():
+    if os.path.exists(os.path.join(BASE_DIR, "static", "js", "main.js")):
+        return send_from_directory(os.path.join(BASE_DIR, "static", "js"), "main.js")
+    elif os.path.exists(os.path.join(BASE_DIR, "main.js")):
+        return send_from_directory(BASE_DIR, "main.js")
+    elif os.path.exists(os.path.join(BASE_DIR, "static", "main.js")):
+        return send_from_directory(os.path.join(BASE_DIR, "static"), "main.js")
+    return "", 404
 
 @app.context_processor
 def inject_global_data():
@@ -33,7 +69,7 @@ def index():
     
     return render_template(
         "index.html",
-        contacts=contacts[:6], # preview latest 6
+        contacts=contacts[:6],
         total_count=total_count,
         personal_count=personal_count,
         professional_count=professional_count
@@ -54,7 +90,6 @@ def add_contact():
             flash("Name and Mobile Number are required fields.", "danger")
             return render_template("add_contact.html", form_data=request.form)
 
-        # Check for duplicate mobile
         all_contacts = get_all_contacts()
         for c in all_contacts:
             if c["mobile"] == mobile:
