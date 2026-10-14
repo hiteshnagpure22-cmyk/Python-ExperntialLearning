@@ -30,25 +30,39 @@ app.jinja_loader = jinja2.ChoiceLoader([
     jinja2.FileSystemLoader(BASE_DIR),
 ])
 
-# Fallback static routes in case style.css / main.js are located in root directory
+# Universal CSS route - handles /src/css/style.css, /static/css/style.css, and /style.css
+@app.route("/src/css/style.css")
 @app.route("/static/css/style.css")
-def serve_fallback_css():
-    if os.path.exists(os.path.join(BASE_DIR, "static", "css", "style.css")):
-        return send_from_directory(os.path.join(BASE_DIR, "static", "css"), "style.css")
-    elif os.path.exists(os.path.join(BASE_DIR, "style.css")):
-        return send_from_directory(BASE_DIR, "style.css")
-    elif os.path.exists(os.path.join(BASE_DIR, "static", "style.css")):
-        return send_from_directory(os.path.join(BASE_DIR, "static"), "style.css")
+@app.route("/static/style.css")
+@app.route("/style.css")
+def serve_css():
+    candidates = [
+        os.path.join(BASE_DIR, "static", "css", "style.css"),
+        os.path.join(BASE_DIR, "static", "style.css"),
+        os.path.join(BASE_DIR, "style.css"),
+        os.path.join(BASE_DIR, "src", "css", "style.css"),
+        os.path.join(BASE_DIR, "src", "style.css")
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return send_from_directory(os.path.dirname(p), os.path.basename(p), mimetype="text/css")
     return "", 404
 
+# Universal JS route - handles /src/js/main.js, /static/js/main.js, and /main.js
+@app.route("/src/js/main.js")
 @app.route("/static/js/main.js")
-def serve_fallback_js():
-    if os.path.exists(os.path.join(BASE_DIR, "static", "js", "main.js")):
-        return send_from_directory(os.path.join(BASE_DIR, "static", "js"), "main.js")
-    elif os.path.exists(os.path.join(BASE_DIR, "main.js")):
-        return send_from_directory(BASE_DIR, "main.js")
-    elif os.path.exists(os.path.join(BASE_DIR, "static", "main.js")):
-        return send_from_directory(os.path.join(BASE_DIR, "static"), "main.js")
+@app.route("/static/main.js")
+@app.route("/main.js")
+def serve_js():
+    candidates = [
+        os.path.join(BASE_DIR, "static", "js", "main.js"),
+        os.path.join(BASE_DIR, "static", "main.js"),
+        os.path.join(BASE_DIR, "main.js"),
+        os.path.join(BASE_DIR, "src", "js", "main.js")
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return send_from_directory(os.path.dirname(p), os.path.basename(p), mimetype="application/javascript")
     return "", 404
 
 @app.context_processor
