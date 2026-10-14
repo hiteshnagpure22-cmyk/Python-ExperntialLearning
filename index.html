@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Contact Management System{% endblock %}
+
+{% block content %}
+<div class="dashboard-hero">
+    <div class="hero-text">
+        <span class="badge badge-accent">System Dashboard</span>
+        <h1 class="hero-title">Contact Management System</h1>
+        <p class="hero-desc">
+            Organize, search, update, and manage your contacts with clean, local persistent file storage.
+        </p>
+        <div class="hero-actions">
+            <a href="{{ url_for('add_contact') }}" class="btn btn-primary">
+                <span>➕ Add New Contact</span>
+            </a>
+            <a href="{{ url_for('view_contacts') }}" class="btn btn-secondary">
+                <span>🔍 Search Contacts</span>
+            </a>
+            <a href="{{ url_for('manage_contacts') }}" class="btn btn-outline">
+                <span>⚙️ Manage & Update</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- STATS CARDS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue">👥</div>
+            <div class="stat-info">
+                <span class="stat-val">{{ total_count }}</span>
+                <span class="stat-label">Total Contacts</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-green">🏠</div>
+            <div class="stat-info">
+                <span class="stat-val">{{ personal_count }}</span>
+                <span class="stat-label">Personal Contacts</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-purple">🏢</div>
+            <div class="stat-info">
+                <span class="stat-val">{{ professional_count }}</span>
+                <span class="stat-label">Work / Organization</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-amber">💾</div>
+            <div class="stat-info">
+                <span class="stat-val">Active</span>
+                <span class="stat-label">Storage: <code>{{ storage_file }}</code></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN ACTIONS GRID (REPLACING THE MODULE ROADMAP) -->
+<section class="section-block">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Main Operations</h2>
+            <p class="section-subtitle">Quick access to all contact management features</p>
+        </div>
+    </div>
+
+    <div class="actions-grid">
+        <!-- 1. ADD CONTACT -->
+        <div class="action-card">
+            <div class="action-icon icon-blue">➕</div>
+            <h3 class="action-card-title">Add Contact</h3>
+            <p class="action-card-desc">Create and store new contacts with Name, Mobile Number, Email, Address, and Organization.</p>
+            <a href="{{ url_for('add_contact') }}" class="btn btn-light btn-block">Add Contact &rarr;</a>
+        </div>
+
+        <!-- 2. SEARCH CONTACTS -->
+        <div class="action-card">
+            <div class="action-icon icon-green">🔍</div>
+            <h3 class="action-card-title">Search Contacts</h3>
+            <p class="action-card-desc">Find any contact instantly by searching their Name, Mobile Number, or Organization.</p>
+            <a href="{{ url_for('view_contacts') }}" class="btn btn-light btn-block">Search & View &rarr;</a>
+        </div>
+
+        <!-- 3. UPDATE CONTACTS -->
+        <div class="action-card">
+            <div class="action-icon icon-purple">✏️</div>
+            <h3 class="action-card-title">Update Contacts</h3>
+            <p class="action-card-desc">Edit and update details of existing contacts with immediate local file saving.</p>
+            <a href="{{ url_for('manage_contacts') }}" class="btn btn-light btn-block">Update Details &rarr;</a>
+        </div>
+
+        <!-- 4. DELETE CONTACTS -->
+        <div class="action-card">
+            <div class="action-icon icon-amber">🗑️</div>
+            <h3 class="action-card-title">Delete Contacts</h3>
+            <p class="action-card-desc">Safely remove unwanted or duplicate contact records with a confirmation prompt.</p>
+            <a href="{{ url_for('manage_contacts') }}" class="btn btn-light btn-block">Manage & Delete &rarr;</a>
+        </div>
+    </div>
+</section>
+
+<!-- RECENT CONTACTS DIRECTORY -->
+<section class="section-block">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Saved Contacts Directory</h2>
+            <p class="section-subtitle">Latest entries stored in <code>{{ storage_file }}</code></p>
+        </div>
+        <div class="header-tools">
+            <form action="{{ url_for('view_contacts') }}" method="GET" class="search-form-mini">
+                <input type="text" name="q" placeholder="Search name or mobile..." class="form-input">
+                <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+            </form>
+        </div>
+    </div>
+
+    {% if contacts %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Mobile Number</th>
+                    <th>Email Address</th>
+                    <th>Address</th>
+                    <th>Organization / Category</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr>
+                    <td class="text-muted">{{ loop.index }}</td>
+                    <td class="font-semibold">{{ contact.name }}</td>
+                    <td>
+                        <a href="tel:{{ contact.mobile }}" class="cell-link font-mono">{{ contact.mobile }}</a>
+                    </td>
+                    <td>
+                        {% if contact.email %}
+                            <a href="mailto:{{ contact.email }}" class="cell-link">{{ contact.email }}</a>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ contact.address or '—' }}</td>
+                    <td>
+                        {% if contact.organization|lower in ['personal', 'none', 'self'] %}
+                            <span class="tag tag-personal">Personal</span>
+                        {% else %}
+                            <span class="tag tag-org">{{ contact.organization }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{{ url_for('edit_contact', contact_id=contact.id) }}" class="btn-icon" title="Update Contact">✏️</a>
+                        <a href="{{ url_for('view_contacts') }}?q={{ contact.mobile }}" class="btn-icon" title="View Details">🔍</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span>Showing recent contacts (Total: {{ total_count }})</span>
+        <a href="{{ url_for('view_contacts') }}" class="btn btn-outline btn-sm">View All Contacts &rarr;</a>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <h4>No contacts stored yet</h4>
+        <p>Your contacts file is empty. Get started by adding a contact.</p>
+        <a href="{{ url_for('add_contact') }}" class="btn btn-primary">Add Contact Now</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

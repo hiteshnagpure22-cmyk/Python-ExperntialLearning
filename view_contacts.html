@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Search Contacts - Contact Management System{% endblock %}
+
+{% block content %}
+<div class="module-header-banner">
+    <div class="title-with-actions">
+        <div>
+            <h1 class="module-page-title">Search & View Contacts</h1>
+            <p class="module-subtitle">Quickly locate contacts by name, mobile number, email, or organization.</p>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('add_contact') }}" class="btn btn-primary">➕ Add Contact</a>
+            <a href="{{ url_for('manage_contacts') }}" class="btn btn-secondary">⚙️ Manage Contacts</a>
+        </div>
+    </div>
+</div>
+
+<!-- SEARCH AND CONTROLS SECTION -->
+<div class="search-panel">
+    <form action="{{ url_for('view_contacts') }}" method="GET" class="search-bar-main">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" id="searchInput" class="search-input" 
+                   placeholder="Type a name, mobile number, or company to search..." 
+                   value="{{ search_query }}">
+            {% if search_query %}
+                <a href="{{ url_for('view_contacts') }}" class="search-clear" title="Clear Search">&times;</a>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-secondary">Search</button>
+    </form>
+
+    <div class="filter-chips">
+        <span class="chip-label">Quick Filters:</span>
+        <button type="button" class="chip active" onclick="filterBy('all')">All Contacts ({{ contacts|length }})</button>
+        <button type="button" class="chip" onclick="filterBy('personal')">Personal</button>
+        <button type="button" class="chip" onclick="filterBy('work')">Work / Business</button>
+    </div>
+</div>
+
+{% if search_query %}
+    <div class="search-results-info">
+        <span>Found <strong>{{ contacts|length }}</strong> contact(s) matching "<em>{{ search_query }}</em>"</span>
+        <a href="{{ url_for('view_contacts') }}" class="text-sm">Clear Filter</a>
+    </div>
+{% endif %}
+
+<!-- CONTACTS CARDS GRID -->
+{% if contacts %}
+<div class="contacts-grid" id="contactsGrid">
+    {% for contact in contacts %}
+    <div class="contact-card" data-name="{{ contact.name|lower }}" data-mobile="{{ contact.mobile }}" data-org="{{ contact.organization|lower }}">
+        <div class="contact-card-header">
+            <div class="avatar-circle">
+                {{ contact.name[:2]|upper }}
+            </div>
+            <div class="contact-title-meta">
+                <h3 class="contact-card-name">{{ contact.name }}</h3>
+                <span class="contact-card-org">
+                    {% if contact.organization|lower in ['personal', 'none', 'self'] %}
+                        <span class="tag tag-personal">Personal</span>
+                    {% else %}
+                        <span class="tag tag-org">{{ contact.organization }}</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="contact-index">#{{ loop.index }}</div>
+        </div>
+
+        <div class="contact-card-body">
+            <div class="info-row">
+                <span class="info-icon">📱</span>
+                <span class="info-label">Mobile:</span>
+                <a href="tel:{{ contact.mobile }}" class="info-value font-mono">{{ contact.mobile }}</a>
+            </div>
+
+            <div class="info-row">
+                <span class="info-icon">✉️</span>
+                <span class="info-label">Email:</span>
+                {% if contact.email %}
+                    <a href="mailto:{{ contact.email }}" class="info-value text-truncate">{{ contact.email }}</a>
+                {% else %}
+                    <span class="info-value text-muted">Not specified</span>
+                {% endif %}
+            </div>
+
+            <div class="info-row">
+                <span class="info-icon">📍</span>
+                <span class="info-label">Address:</span>
+                <span class="info-value">{{ contact.address or '—' }}</span>
+            </div>
+        </div>
+
+        <div class="contact-card-actions">
+            <a href="tel:{{ contact.mobile }}" class="card-btn btn-call" title="Call">📞 Call</a>
+            <a href="https://wa.me/91{{ contact.mobile }}" target="_blank" class="card-btn btn-wa" title="WhatsApp">💬 WhatsApp</a>
+            <a href="{{ url_for('edit_contact', contact_id=contact.id) }}" class="card-btn btn-edit" title="Update">✏️ Update</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>No Contacts Found</h3>
+    {% if search_query %}
+        <p>No contact matched your search criteria: "<strong>{{ search_query }}</strong>".</p>
+        <a href="{{ url_for('view_contacts') }}" class="btn btn-outline">Clear Search</a>
+    {% else %}
+        <p>There are no contacts stored yet.</p>
+        <a href="{{ url_for('add_contact') }}" class="btn btn-primary">Add Contact Now</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+function filterBy(filterType) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const cards = document.querySelectorAll('.contact-card');
+    cards.forEach(card => {
+        const org = card.getAttribute('data-org') || '';
+        if (filterType === 'all') {
+            card.style.display = 'flex';
+        } else if (filterType === 'personal') {
+            if (org.includes('personal') || org.includes('none') || org.includes('self') || org.includes('family')) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        } else if (filterType === 'work') {
+            if (!org.includes('personal') && !org.includes('none') && !org.includes('self')) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Live filter while typing
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        const term = this.value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.contact-card');
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name') || '';
+            const mobile = card.getAttribute('data-mobile') || '';
+            const org = card.getAttribute('data-org') || '';
+            if (name.includes(term) || mobile.includes(term) || org.includes(term)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+}
+</script>
+{% endblock %}

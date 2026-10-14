@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Update Contact - Contact Management System{% endblock %}
+
+{% block content %}
+<div class="module-header-banner">
+    <h1 class="module-page-title">Update Contact</h1>
+    <p class="module-subtitle">Modifying record for <strong>{{ contact.name }}</strong></p>
+</div>
+
+<div class="form-layout-grid">
+    <div class="form-card">
+        <div class="card-head">
+            <h3>Update Contact Details</h3>
+            <span class="text-muted text-sm">Modify the fields below</span>
+        </div>
+
+        <form action="{{ url_for('edit_contact', contact_id=contact.id) }}" method="POST" class="contact-form">
+            <div class="form-group">
+                <label for="name" class="form-label">Full Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" class="form-input" required value="{{ contact.name }}">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label for="mobile" class="form-label">Mobile Number <span class="required">*</span></label>
+                    <input type="tel" id="mobile" name="mobile" class="form-input" required value="{{ contact.mobile }}">
+                </div>
+                <div class="form-group flex-1">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" value="{{ contact.email }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address" class="form-label">Address</label>
+                <input type="text" id="address" name="address" class="form-input" value="{{ contact.address }}">
+            </div>
+
+            <div class="form-group">
+                <label for="organization" class="form-label">Organization / Category</label>
+                <input type="text" id="organization" name="organization" class="form-input" value="{{ contact.organization }}">
+                <div class="quick-tags">
+                    <span class="text-xs text-muted">Quick fill:</span>
+                    <button type="button" class="btn-tag" onclick="document.getElementById('organization').value='Personal'">🏠 Personal</button>
+                    <button type="button" class="btn-tag" onclick="document.getElementById('organization').value='Work'">💼 Work</button>
+                    <button type="button" class="btn-tag" onclick="document.getElementById('organization').value='Office'">🏢 Office</button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <span>💾 Save Changes</span>
+                </button>
+                <a href="{{ url_for('manage_contacts') }}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="info-sidebar">
+        <div class="sidebar-box">
+            <h4>Record Information</h4>
+            <p class="text-sm text-muted">
+                Changes will be saved immediately to your local storage file: <code>{{ storage_file }}</code>.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

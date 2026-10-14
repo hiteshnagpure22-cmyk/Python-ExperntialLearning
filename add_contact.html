@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Add Contact - Contact Management System{% endblock %}
+
+{% block content %}
+<div class="module-header-banner">
+    <h1 class="module-page-title">Add New Contact</h1>
+    <p class="module-subtitle">Enter personal or professional details to create and save a new contact.</p>
+</div>
+
+<div class="form-layout-grid">
+    <!-- FORM CARD -->
+    <div class="form-card">
+        <div class="card-head">
+            <h3>Contact Information</h3>
+            <span class="text-muted text-sm">* Required fields</span>
+        </div>
+
+        <form action="{{ url_for('add_contact') }}" method="POST" id="addContactForm" class="contact-form">
+            <div class="form-group">
+                <label for="name" class="form-label">Full Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" class="form-input" placeholder="e.g. John Doe" required value="{{ form_data.get('name', '') }}">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label for="mobile" class="form-label">Mobile Number <span class="required">*</span></label>
+                    <input type="tel" id="mobile" name="mobile" class="form-input" placeholder="e.g. 9876543210" required value="{{ form_data.get('mobile', '') }}">
+                </div>
+                <div class="form-group flex-1">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="e.g. name@example.com" value="{{ form_data.get('email', '') }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address" class="form-label">Address</label>
+                <input type="text" id="address" name="address" class="form-input" placeholder="e.g. Street, City, State" value="{{ form_data.get('address', '') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="organization" class="form-label">Organization / Category</label>
+                <input type="text" id="organization" name="organization" class="form-input" placeholder="e.g. Personal, Company, or Work" value="{{ form_data.get('organization', 'Personal') }}">
+                <div class="quick-tags">
+                    <span class="text-xs text-muted">Quick fill:</span>
+                    <button type="button" class="btn-tag" onclick="setOrg('Personal')">🏠 Personal</button>
+                    <button type="button" class="btn-tag" onclick="setOrg('Work')">💼 Work</button>
+                    <button type="button" class="btn-tag" onclick="setOrg('Office')">🏢 Office</button>
+                    <button type="button" class="btn-tag" onclick="setOrg('Family')">❤️ Family</button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <span>💾 Save Contact</span>
+                </button>
+                <a href="{{ url_for('view_contacts') }}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- LIVE PREVIEW CARD -->
+    <div class="info-sidebar">
+        <div class="sidebar-box">
+            <h4>Live Contact Preview</h4>
+            <p class="text-sm text-muted">Preview of how this contact card will appear in your directory:</p>
+
+            <div class="contact-card preview-card mt-3">
+                <div class="contact-card-header">
+                    <div class="avatar-circle" id="previewAvatar">👤</div>
+                    <div class="contact-title-meta">
+                        <h4 class="contact-card-name" id="previewName">Contact Name</h4>
+                        <span class="contact-card-org">
+                            <span class="tag tag-personal" id="previewOrg">Personal</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="contact-card-body">
+                    <div class="info-row">
+                        <span class="info-icon">📱</span>
+                        <span class="info-label">Mobile:</span>
+                        <span class="info-value font-mono" id="previewMobile">Mobile Number</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">✉️</span>
+                        <span class="info-label">Email:</span>
+                        <span class="info-value text-truncate" id="previewEmail">Email Address</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">📍</span>
+                        <span class="info-label">Address:</span>
+                        <span class="info-value" id="previewAddress">Address</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-box">
+            <h4>Storage Details</h4>
+            <p class="text-sm text-muted">Contacts are saved securely in your local file: <code>{{ storage_file }}</code>.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function setOrg(val) {
+    document.getElementById('organization').value = val;
+    updateLivePreview();
+}
+
+function updateLivePreview() {
+    const name = document.getElementById('name').value.trim() || 'Contact Name';
+    const mobile = document.getElementById('mobile').value.trim() || 'Mobile Number';
+    const email = document.getElementById('email').value.trim() || 'Email Address';
+    const address = document.getElementById('address').value.trim() || 'Address';
+    const org = document.getElementById('organization').value.trim() || 'Personal';
+
+    document.getElementById('previewName').innerText = name;
+    document.getElementById('previewMobile').innerText = mobile;
+    document.getElementById('previewEmail').innerText = email;
+    document.getElementById('previewAddress').innerText = address;
+    document.getElementById('previewOrg').innerText = org;
+    
+    // Avatar letters
+    const initials = name !== 'Contact Name' ? name.substring(0, 2).toUpperCase() : '👤';
+    document.getElementById('previewAvatar').innerText = initials;
+}
+
+document.querySelectorAll('#addContactForm input').forEach(input => {
+    input.addEventListener('input', updateLivePreview);
+});
+updateLivePreview();
+</script>
+{% endblock %}
